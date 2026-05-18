@@ -4,6 +4,36 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 
+from flask import Flask
+from threading import Thread
+
+
+# =========================
+# Render 포트 확인용 웹서버
+# =========================
+
+app = Flask(__name__)
+
+@app.route("/")
+def home():
+    return "Hanguk Nick Bot is running!"
+
+
+def run_web_server():
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port, debug=False, use_reloader=False)
+
+
+def keep_alive():
+    server = Thread(target=run_web_server)
+    server.daemon = True
+    server.start()
+
+
+# =========================
+# Discord Bot 설정
+# =========================
+
 TOKEN = os.getenv("DISCORD_TOKEN")
 
 if not TOKEN:
@@ -152,4 +182,8 @@ async def status_panel_error(interaction: discord.Interaction, error):
         )
 
 
+# Render가 포트를 감지할 수 있게 웹서버 먼저 실행
+keep_alive()
+
+# Discord Bot 실행
 bot.run(TOKEN)
